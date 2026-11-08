@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Révision Écrite Espagnol : Sofia 📝</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #b8c6db 100%);
+      margin: 0; padding: 20px;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh;
+    }
+    .game-container {
+      background: white; border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      padding: 25px; width: 100%; max-width: 550px;
+      box-sizing: border-box;
+    }
+    h1 { text-align: center; color: #2c3e50; margin-top: 0; font-size: 22px; }
+    .progress-bar { background: #e0e0e0; height: 8px; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+    .progress { background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s; }
+    .chat-box {
+      background: #f8f9fa; border-radius: 12px; padding: 15px;
+      height: 280px; overflow-y: auto; margin-bottom: 20px;
+      border: 1px solid #e1e8ed; display: flex; flex-direction: column; gap: 10px;
+    }
+    .msg { padding: 10px 14px; border-radius: 15px; max-width: 85%; font-size: 15px; line-height: 1.4; }
+    .msg-mia { background: #ffeaa7; color: #2d3436; align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg-zoe { background: #dfe6e9; color: #2d3436; align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg-sofia { background: #0984e3; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-sofia-err { background: #d63031; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-system { background: #b2bec3; color: white; align-self: center; text-align: center; font-size: 13px; border-radius: 8px; }
+    .input-zone { display: flex; flex-direction: column; gap: 10px; }
+    textarea {
+      width: 100%; padding: 12px; border: 2px solid #0984e3; border-radius: 10px;
+      font-size: 15px; font-family: inherit; box-sizing: border-box; resize: none;
+    }
+    .btn-group { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold;
+      cursor: pointer; border: none; transition: background 0.2s;
+    }
+    .btn-submit { background: #0984e3; color: white; }
+    .btn-submit:hover { background: #026aa7; }
+    .btn-hint { background: #f1c40f; color: #2c3e50; }
+    .btn-hint:hover { background: #f39c12; }
+    .btn-restart { background: #2ecc71; color: white; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%; }
+    .hint-text { background: #fff9db; border: 1px dashed #f59f00; color: #664d03; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <h1>✍️ Révision Écrite : ¡Hablar del deporte!</h1>
+    <div class="progress-bar"><div id="progress" class="progress"></div></div>
+    
+    <div id="chat-box" class="chat-box"></div>
+    
+    <div id="action-zone" class="input-zone">
+      <p style="margin: 0; font-weight: bold; color: #2c3e50;" id="prompt-text">À toi d'écrire la réplique de Sofia :</p>
+      <textarea id="user-input" rows="3" placeholder="Tape le texte en espagnol ici... (attention aux accents !)"></textarea>
+      <div id="hint-box" class="hint-text"></div>
+      <div class="btn-group">
+        <button class="btn btn-hint" onclick="showHint()">Besoin d'un indice 💡</button>
+        <button class="btn btn-submit" onclick="validateText()">Valider ma réponse 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const script = [
+      { speaker: "Mia", text: "¡Hola a todos! Bienvenidos a nuestra entrevista. Hoy vamos a hablar del deporte, de la motivación y de las dificultades de ser deportista. Estoy con dos deportistas. ¡Hola chicas!" },
+      { speaker: "Léa & Zoé", text: "¡Hola! Gracias por invitarnos." },
+      { speaker: "Sofia", text: "¡Hola! Estoy muy contenta de estar aquí." },
+      { speaker: "Mia", text: "Para empezar, ¿podéis presentaros?" },
+      { speaker: "Léa & Zoé", text: "Me llamo Léa, tengo 18 años y juego al fútbol desde hace diez años." },
+      { speaker: "Sofia", text: "Me llamo Emma, tengo 19 años y practico atletismo desde hace ocho años." },
+      { speaker: "Mia", text: "¿Por qué elegisteis estos deportes?" },
+      { speaker: "Léa & Zoé", text: "Elegí el fútbol porque me gusta jugar en equipo, hacer nouveaux amigos y ganar partidos. Empecé a jugar cuando era pequeña." },
+      { speaker: "Mia", text: "¿Cuántas veces entrenáis por semana?" },
+      { speaker: "Léa & Zoé", text: "Entreno cuatro veces por semaine y tengo un partido el fin de semana." },
+      { speaker: "Sofia", text: "Entreno cinco veces por semana. A veces entreno por la mañana y por la tarde." },
+      { speaker: "Mia", text: "¿Es mucho trabajo? ¿Tenéis tempo para estudiar y descansar?" },
+      { speaker: "Léa & Zoé", text: "Sí, pero a veces es difícil organizar mi tiempo." },
+      { speaker: "Sofia", text: "Estoy de acuerdo. Hay que organizarse bien y dormir suficiente." },
+      { speaker: "Mia", text: "¿Cuál es la mayor dificultad en vuestro deporte?" },
+      { speaker: "Léa & Zoé", text: "Para mí, la mayor dificultad es perder un partido importante. A veces es difícil aceptar la derrota." },
+      { speaker: "Sofia", text: "Para mí, es el cansancio y la presión de las competiciones. Siempre quiero mejorar mis resultados." },
+      { speaker: "Mia", text: "¿Alguna vez habéis querido abandonar?" },
+      { speaker: "Léa & Zoé", text: "Sí, algunas veces especialmente después de una derrota. Pero mi familia y mis amigos me ayudan a continuar." },
+      { speaker: "Sofia", text: "Sí, pero recuerdo por qué empecé. El deporte es mi pasión y no quiero rendirme." },
+      { speaker: "Mia", text: "¿Cómo reaccionáis cuando perdéis?" },
+      { speaker: "Léa & Zoé", text: "Estoy triste, pero intento aprender de mis errores." },
+      { speaker: "Sofia", text: "Yo también. Pienso en lo que puedo mejorar para la próxima competición." },
+      { speaker: "Mia", text: "¿Cuál es vuestro mayor recuerdo deportivo?" },
+      { speaker: "Léa & Zoé", text: "Mi mejor recuerdo es ganar un torneo con mi equipo. Fue un momento increíble." },
+      { speaker: "Sofia", text: "Mi mejor recuerdo es participar en mi primera competición importante. Estaba muy nerviosa, pero muy feliz." },
+      { speaker: "Mia", text: "¿Cuáles son vuestros sueños para el futuro?" },
+      { speaker: "Léa & Zoé", text: "Mi sueño es convertirme en futbolista profesional y jugar en un gran equipo." },
+      { speaker: "Sofia", text: "Mi sueño es participar en los Juegos Olímpicos y representar a mi país." },
+      { speaker: "Mia", text: "Son sueños fantásticos. ¿Qué consejo daríais a los jóvenes que quieren practicar deporte?" },
+      { speaker: "Léa & Zoé", text: "Hay que creer en una misma, trabajar mucho y nunca rendirse." },
+      { speaker: "Sofia", text: "Hay que disfrutar, tener confianza y no compararse con los demás." },
+      { speaker: "Mia", text: "Muchas gracias chicas por responder a mis preguntas. Hoy hemos aprendido que el deporte necesita motivación, esfuerzo y pasión. También es importante aceptar las derrotas y seguir adelante. ¿Queréis añadir algo para terminar?" },
+      { speaker: "Léa & Zoé", text: "Sí, quiero deir que el fútbol me ha enseñado el valor del travail en equipo." },
+      { speaker: "Sofia", text: "Y yo quiero decir que el deporte nos ayuda a tener confianza y a superar nuestros límites." },
+      { speaker: "Mia", text: "¡Muchas gracias a las dos! ¡Hasta pronto y buena suerte!" },
+      { speaker: "Tous", text: "¡Muchas gracias! ¡Hasta pronto!" }
+    ];
+
+    let currentIndex = 0;
+    const chatBox = document.getElementById('chat-box');
+    const actionZone = document.getElementById('action-zone');
+    const userInput = document.getElementById('user-input');
+    const hintBox = document.getElementById('hint-box');
+
+    function cleanString(str) {
+      // Nettoie la chaîne pour éviter que le jeu bloque sur des espaces cachés ou la casse
+      return str.trim().toLowerCase().replace(/[\s,.:;!?¡¿""'']/g, "");
+    }
+
+    function advance() {
+      if (currentIndex >= script.length) {
+        endGame();
+        return;
+      }
+
+      let currentLine = script[currentIndex];
+      document.getElementById('progress').style.width = `${(currentIndex / script.length) * 100}%`;
+
+      if (currentLine.speaker === "Sofia") {
+        document.getElementById('action-zone').style.opacity = "1";
+        userInput.disabled = false;
+        userInput.focus();
+        hintBox.style.display = "none";
+      } else {
+        userInput.disabled = true;
+        let kind = currentLine.speaker === "Mia" ? "mia" : "zoe";
+        addMessage(currentLine.speaker, currentLine.text, kind);
+        currentIndex++;
+        setTimeout(advance, 1000);
+      }
+    }
+
+    function addMessage(sender, text, kind) {
+      const msg = document.createElement('div');
+      msg.className = `msg msg-${kind}`;
+      msg.innerHTML = `<strong>${sender} :</strong> ${text}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showHint() {
+      let correctText = script[currentIndex].text;
+      hintBox.innerHTML = `💡 <b>Aide de mémorisation :</b><br>"${correctText}"`;
+      hintBox.style.display = "block";
+    }
+
+    function validateText() {
+      let textTyped = userInput.value;
+      let correctText = script[currentIndex].text;
+
+      if (cleanString(textTyped) === cleanString(correctText)) {
+        addMessage("Sofia (Toi) ✅", textTyped, "sofia");
+        userInput.value = "";
+        currentIndex++;
+        advance();
+      } else {
+alert(❌ Ce n'est pas tout à fait la bonne écriture !\n\nVoici ce qui est écrit sur ton cahier :\n"${correctText}"\n\nCorrige ton texte pour pouvoir continuer.);
+}
+}
+// Permet d'envoyer avec la touche Entrée sans cliquer
+userInput.addEventListener("keydown", function(e) {
+if (e.key === "Enter" && !e.shiftKey) {
+e.preventDefault();
+validateText();
+}
+});
+advance();
+function endGame() {
+document.getElementById('progress').style.width = "100%";
+addMessage("📋 Système", "Fin de la session ! Tu as écrit toutes tes répliques sans fautes.", "system");
+actionZone.innerHTML = <h3 style="text-align:center;">🎉 Parfait ! Tu connais ton texte !</h3> <button class="btn btn-restart" onclick="location.reload()">Refaire un test écrit 🔄</button>;
